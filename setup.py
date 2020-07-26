@@ -21,7 +21,6 @@ setup(
     'Topic :: Utilities'
   ],
   install_requires=['utils==0.0.1', 'discogs==0.0.1'],
-  dependency_links=['git+ssh://git@github.com/tgadf/utils.git#egg=utils-0.0.1',
-                    'git+ssh://git@github.com/tgadf/discogs.git#egg=discogs-0.0.1']
+  dependency_links=[]
 )
  

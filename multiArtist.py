@@ -1,5 +1,7 @@
 from searchUtils import findNearest
-
+from ioUtils import getFile
+import hashlib 
+  
 class multiartist:
     def __init__(self, cutoff=0.9, discdata=None, exact=False):
         self.cutoff   = cutoff    
@@ -7,12 +9,30 @@ class multiartist:
         self.exact    = exact
         
         self.basicdelims = ["Duet With", "Presents", "Featuring"]
-        self.delims = [",", "&", " And ", "+", "/", "With The", " with ", " With ", " y ", " Y ", " feat.",  " ft.", " Feat. ", " x ", " X ", " Ft. ", " VS. ", " VS ", " Vs ", " vs. ", " Vs. ", " × "]
+        self.delims = [",", "&", " And ", "+", "/", "With The", " with ", " With ", " y ", " Y ", " feat.",  " ft.", " Feat. ", " x ", " X ", " Ft. ", " VS. ", " VS ", " Vs ", " vs. ", " Vs. ", " × ", " featuring ", " Feturing "]
         self.discArtists = []
         if self.discdata is not None:
             self.discArtists = [x for x in discdata.keys() if x is not None]
         self.knownDelimArtists = {artist: True for artist in self.discArtists if self.nDelims(artist) > 0}
-
+        
+        self.knownMultiDelimArtists = []
+        self.masks = {}
+        
+        
+    def setKnownMultiDelimArtists(self, artists):
+        if isinstance(artists, list):
+            self.knownMultiDelimArtists = artists
+        elif isinstance(str):
+            self.knownMultiDelimArtists = getFile(artists, debug=True)
+            
+        for artist in self.knownMultiDelimArtists:
+            result = hashlib.md5(artist.encode()) 
+            self.masks[artist] = result.hexdigest()
+            self.masks[result.hexdigest()] = artist            
+            
+        print("Adding {0} known multi delim artists.".format(len(self.knownMultiDelimArtists)))
+        
+        
     
     def getDiscArtists(self):
         return self.discArtists
@@ -41,11 +61,13 @@ class multiartist:
     def getNdelims(self, val):
         return len(val)
 
-    def addArtist(self, allArtists, val, debug=False):
+    def addArtist(self, allArtists, val, debug=False, reason=None):
         #print("L={0}".format(len(allArtists)))
         if allArtists.get(val) is None:
             if debug:
                 print("Adding {0}. Sum is {1}".format(val, len(allArtists)))
+                if reason is not None:
+                    print("  Reason: {0}".format(reason))
             allArtists[val] = True
     
     
@@ -56,8 +78,29 @@ class multiartist:
 
 
     def newMethod(self, artist, debug=False):
-        artist = self.cleanArtist(artist)
         allArtists = {}
+        
+        ##############################################################################
+        ## Quick check to see if artist is a known problem for the algorithm
+        ##############################################################################
+        if artist in self.knownMultiDelimArtists and False:
+            self.addArtist(allArtists, artist, debug, "Known Artist")
+            knownArtists = set(allArtists.keys())
+            return self.combineResults(allArtists, knownArtists)
+        
+        
+        ##############################################################################
+        ## Mask Multi Artists
+        ##############################################################################
+        for check in self.knownMultiDelimArtists:
+            if artist.find(check) != -1:
+                artist = artist.replace(check, self.masks[check])
+        
+        
+        ##############################################################################
+        ## Clean Artist And Set 1st Order Delims
+        ##############################################################################
+        artist = self.cleanArtist(artist)
         d1delims = self.getBasicDelimData(artist)
         if len(d1delims) == 0:
             d1delims = self.getDelimData(artist)
@@ -66,10 +109,10 @@ class multiartist:
 
         knownArtists = set()
         if len(d1delims) == 0:
-            self.addArtist(allArtists, artist, debug)
+            self.addArtist(allArtists, artist, debug, "No D1 Delims")
             knownArtists = set(allArtists.keys())
         elif self.isKnownArtist(artist):
-            self.addArtist(allArtists, artist, debug)
+            self.addArtist(allArtists, artist, debug, "Known Delims")
             knownArtists = set(allArtists.keys())
             d1delims = {}
 
@@ -166,7 +209,11 @@ class multiartist:
 
         ##############################################################################
         ## Combine Results
-        ##############################################################################                                                    
+        ##############################################################################
+        return self.combineResults(allArtists, knownArtists)
+        
+        
+    def combineResults(self, allArtists, knownArtists):
         results = {}
         if self.discdata is not None and len(self.discArtists) > 0:
             for name in knownArtists:
@@ -181,11 +228,15 @@ class multiartist:
                         
                 results[name] = retval
         else:
-            results = {k: ['?'] for k,v in allArtists.items()}
-                
+            for artist in allArtists.keys():
+                if self.masks.get(artist) is not None:
+                    artist = self.masks[artist]
+                results[artist] = ['?']
+            #results = {k: ['?'] for k,v in allArtists.items()}            
         return results
+    
 
-    def getArtistNames(self, artist, debug=False):        
+    def getArtistNames(self, artist, debug=False):
         return self.newMethod(artist, debug)
     
         if self.nDelims(artist) == 0:
