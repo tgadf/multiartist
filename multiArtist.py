@@ -9,7 +9,7 @@ class multiartist:
         self.exact    = exact
         
         self.basicdelims = ["Duet With", "Presents", "Featuring"]
-        self.delims = [",", "&", " And ", "+", "/", "With The", " with ", " With ", " y ", " Y ", " feat.",  " ft.", " Feat. ", " x ", " X ", " Ft. ", " VS. ", " VS ", " Vs ", " vs. ", " Vs. ", " × ", " featuring ", " Feturing "]
+        self.delims = ["Duet With", "Presents", "Featuring", ",", "&", " And ", "+", "/", "With The", " with ", " With ", " y ", " Y ", " feat.",  " ft.", " Feat. ", " x ", " X ", " Ft. ", " VS. ", " VS ", " Vs ", " vs. ", " Vs. ", " × ", " featuring ", " Feturing "]
         self.discArtists = []
         if self.discdata is not None:
             self.discArtists = [x for x in discdata.keys() if x is not None]
@@ -25,10 +25,17 @@ class multiartist:
         elif isinstance(str):
             self.knownMultiDelimArtists = getFile(artists, debug=True)
             
-        for artist in self.knownMultiDelimArtists:
+        for i,artist in enumerate(self.knownMultiDelimArtists):
+            if len(artist) == 0:
+                raise ValueError("Artist has no length in masking")
+            #print(i,'/',len(self.knownMultiDelimArtists),'\t',artist)
             result = hashlib.md5(artist.encode()) 
+            if self.masks.get(artist) is not None:
+                raise ValueError("There is an error with masking artist {0}".format(artist))            
             self.masks[artist] = result.hexdigest()
-            self.masks[result.hexdigest()] = artist            
+            if self.masks.get(result.hexdigest()) is not None:
+                raise ValueError("There is an error with masking artist {0}".format(artist))
+            self.masks[result.hexdigest()] = artist
             
         print("Adding {0} known multi delim artists.".format(len(self.knownMultiDelimArtists)))
         
@@ -79,6 +86,8 @@ class multiartist:
 
     def newMethod(self, artist, debug=False):
         allArtists = {}
+        if debug:
+            print("Finding Artists Within: {0}".format(artist))
         
         ##############################################################################
         ## Quick check to see if artist is a known problem for the algorithm
@@ -86,7 +95,7 @@ class multiartist:
         if artist in self.knownMultiDelimArtists and False:
             self.addArtist(allArtists, artist, debug, "Known Artist")
             knownArtists = set(allArtists.keys())
-            return self.combineResults(allArtists, knownArtists)
+            return self.combineResults(allArtists, knownArtists, debug)
         
         
         ##############################################################################
@@ -94,7 +103,12 @@ class multiartist:
         ##############################################################################
         for check in self.knownMultiDelimArtists:
             if artist.find(check) != -1:
+                if debug:
+                    print("  Found Known Artist {0} Within {1}".format(check, artist))
                 artist = artist.replace(check, self.masks[check])
+                if debug:
+                    print("     Artist --> {0}".format(artist))
+
         
         
         ##############################################################################
@@ -210,11 +224,15 @@ class multiartist:
         ##############################################################################
         ## Combine Results
         ##############################################################################
-        return self.combineResults(allArtists, knownArtists)
+        return self.combineResults(allArtists, knownArtists, debug)
         
         
-    def combineResults(self, allArtists, knownArtists):
+    def combineResults(self, allArtists, knownArtists, debug=False):
         results = {}
+        if debug:
+            print("Combining Results")
+            print("All Artists:   {0}".format(allArtists))
+            print("Known Artists: {0}".format(knownArtists))
         if self.discdata is not None and len(self.discArtists) > 0:
             for name in knownArtists:
                 retval = self.discdata.get(name)
@@ -237,6 +255,8 @@ class multiartist:
     
 
     def getArtistNames(self, artist, debug=False):
+        if debug:
+            print("Getting Artist Names For {0}".format(artist))
         return self.newMethod(artist, debug)
     
         if self.nDelims(artist) == 0:
