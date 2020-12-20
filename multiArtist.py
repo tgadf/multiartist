@@ -8,8 +8,9 @@ class multiartist:
         self.discdata = discdata
         self.exact    = exact
         
+        self.uberdelims  = [" ::: "]
         self.basicdelims = ["Duet With", "Presents", "Featuring"]
-        self.delims = ["Duet With", "Presents", "Featuring", ",", "&", " And ", "+", "/", "With The", " with ", " With ", " y ", " Y ", " feat.",  " ft.", " Feat. ", " x ", " X ", " Ft. ", " VS. ", " VS ", " Vs ", " vs. ", " Vs. ", " × ", " featuring ", " Feturing "]
+        self.delims      = ["Duet With", "Presents", "Featuring", ",", "&", " And ", "+", "/", "With The", " with ", " With ", " y ", " Y ", " feat.",  " ft.", " Feat. ", " x ", " X ", " Ft. ", " VS. ", " VS ", " Vs ", " vs. ", " Vs. ", " × ", " featuring ", " Feturing "]
         self.discArtists = []
         if self.discdata is not None:
             self.discArtists = [x for x in discdata.keys() if x is not None]
@@ -108,6 +109,19 @@ class multiartist:
                 artist = artist.replace(check, self.masks[check])
                 if debug:
                     print("     Artist --> {0}".format(artist))
+        
+        
+        ##############################################################################
+        ## Uber Delim Artists
+        ##############################################################################
+        for check in self.uberdelims:
+            if artist.find(check) != -1:
+                if debug:
+                    print("  Found Known Artist {0} Within {1}".format(check, artist))
+            for uname in artist.split(check):
+                self.addArtist(allArtists, uname, debug, "Known Uber Artist")
+            knownArtists = set(allArtists.keys())
+            return self.combineResults(allArtists, knownArtists, debug)
 
         
         
