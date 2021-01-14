@@ -20,7 +20,7 @@ setup(
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Utilities'
   ],
-  install_requires=['utils==0.0.1', 'discogs==0.0.1'],
+  install_requires=['utils==0.0.1'],
   dependency_links=[]
 )
  
