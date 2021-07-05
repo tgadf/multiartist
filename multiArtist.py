@@ -7,6 +7,7 @@ class multiartist:
         self.cutoff   = cutoff    
         self.discdata = discdata
         self.exact    = exact
+        self.debug    = False
         
         self.uberdelims  = [" ::: "]
         self.basicdelims = ["Duet With", "Presents", "Featuring"]
@@ -38,7 +39,8 @@ class multiartist:
                 raise ValueError("There is an error with masking artist {0}".format(artist))
             self.masks[result.hexdigest()] = artist
             
-        print("Adding {0} known multi delim artists.".format(len(self.knownMultiDelimArtists)))
+        if self.debug:
+            print("Adding {0} known multi delim artists.".format(len(self.knownMultiDelimArtists)))
         
         
     
