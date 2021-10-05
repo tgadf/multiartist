@@ -1,6 +1,7 @@
 from searchUtils import findNearest
 from ioUtils import getFile
-import hashlib 
+import hashlib
+from masterMultiArtistDB import masterMultiArtistDB
   
 class multiartist:
     def __init__(self, cutoff=0.9, discdata=None, exact=False):
@@ -13,20 +14,23 @@ class multiartist:
         self.basicdelims = ["Duet With", "Presents", "Featuring"]
         self.delims      = ["Duet With", "Presents", "Featuring", ",", "&", " And ", "+", "/", "With The", " with ", " With ", " y ", " Y ", " feat.",  " ft.", " Feat. ", " x ", " X ", " Ft. ", " VS. ", " VS ", " Vs ", " vs. ", " Vs. ", " × ", " featuring ", " Feturing ", " Meets "]
         self.discArtists = []
+
+        self.masks = {}
+        self.setKnownMultiDelimArtists()
+        
+        old="""
         if self.discdata is not None:
             self.discArtists = [x for x in discdata.keys() if x is not None]
         self.knownDelimArtists = {artist: True for artist in self.discArtists if self.nDelims(artist) > 0}
         
         self.knownMultiDelimArtists = []
-        self.masks = {}
+        """
         
         
-    def setKnownMultiDelimArtists(self, artists):
-        if isinstance(artists, list):
-            self.knownMultiDelimArtists = artists
-        elif isinstance(str):
-            self.knownMultiDelimArtists = getFile(artists, debug=True)
-            
+    def setKnownMultiDelimArtists(self):        
+        self.mmadb    = masterMultiArtistDB()
+        self.knownMultiDelimArtists = self.mmadb.getData()
+        
         for i,artist in enumerate(self.knownMultiDelimArtists):
             if len(artist) == 0:
                 raise ValueError("Artist has no length in masking")

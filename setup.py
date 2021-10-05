@@ -1,9 +1,17 @@
-from distutils.core import setup
-import setuptools
+from setuptools import setup
+from setuptools.command.install import install
+from sys import prefix
+
+from masterMultiArtistDB import masterMultiArtistDB
+
+class PostInstallCommand(install):
+    def run(self):
+        install.run(self)
+        mmadb = masterMultiArtistDB(install=True)
 
 setup(
   name = 'multiartist',
-  py_modules = ['multiArtist'],
+  py_modules = ['multiArtist', 'masterMultiArtistDB'],
   version = '0.0.1',
   description = 'A Python Wrapper To Parse Music Chart Data',
   long_description = open('README.md').read(),
