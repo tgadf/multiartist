@@ -13,6 +13,7 @@ setup(
   name = 'multiartist',
   py_modules = ['multiArtist', 'masterMultiArtistDB'],
   version = '0.0.1',
+  cmdclass={'install': PostInstallCommand},  
   description = 'A Python Wrapper To Parse Music Chart Data',
   long_description = open('README.md').read(),
   author = 'Thomas Gadfort',
@@ -28,7 +29,7 @@ setup(
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Topic :: Utilities'
   ],
-  install_requires=['utils==0.0.1'],
-  dependency_links=[]
+  install_requires=['jupyter_contrib_nbextensions'],
+  dependency_links=['git+ssh://git@github.com/tgadf/utils.git#egg=utils-0.0.1']
 )
  

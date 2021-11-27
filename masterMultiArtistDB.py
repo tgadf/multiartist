@@ -1,4 +1,4 @@
-from ioUtils import getFile, saveFile
+from fileIO import fileIO
 from fsUtils import setDir, isFile, isDir, mkDir, setFile
 from timeUtils import timestat
 from sys import prefix
@@ -10,6 +10,7 @@ class masterMultiArtistDB:
         print("{0} masterMultiArtistDB() {1}".format("="*25,"="*25))
         self.debug  = debug
         
+        self.io = fileIO()
         self.multiArtistDir = setDir(prefix, 'multiartist')
         self.initializeData() if install is False else self.installData()
     
@@ -63,7 +64,7 @@ class masterMultiArtistDB:
         ltype = {True: "Local", False: "Main"}
         ts = timestat("Getting Manual Renames Data From {0} {1} File".format(ltype[local], ftype[fast]))
         fname = self.getFilename(fast, local)
-        manualRenames = getFile(fname)
+        manualRenames = self.io.get(fname)
 
         ts.stop()
     
@@ -81,11 +82,11 @@ class masterMultiArtistDB:
         self.saveData(manualMultiArtists, fast=True, local=False)
         ts.stop()
         
-    def saveData(self, manualMultiArtists=None, fast=True, local=False):
+    def saveData(self, manualMultiArtists, fast=True, local=False):
         ftype = {True: "Pickle", False: "YAML"}
         ltype = {True: "Local", False: "Main"}
         ts = timestat("Saving Manual Renames Data To {0} {1} File".format(ltype[local], ftype[fast]))
-        manualMultiArtists = self.manualMultiArtists if manualMultiArtists is None else manualMultiArtists
+        #manualMultiArtists = self.manualMultiArtists if manualMultiArtists is None else manualMultiArtists
         #self.summary(manualRenames)
         
         fname = self.getFilename(fast, local)
@@ -94,7 +95,7 @@ class masterMultiArtistDB:
             toSave = toSave.sort_values()
         else:
             toSave = manualMultiArtists.to_list() if isinstance(manualMultiArtists, Series) else manualMultiArtists
-        saveFile(idata=toSave, ifile=fname)
+        self.io.save(idata=toSave, ifile=fname)
         
         ts.stop()
         
